@@ -1,4 +1,4 @@
-module WebStaticBuild
+module github.com/Rehtt/WebStaticBuild
 
 go 1.17
 
