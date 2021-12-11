@@ -7,10 +7,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/Rehtt/GoTools"
 	"io/ioutil"
 	"os"
-	"strconv"
-	"strings"
 )
 
 type write struct {
@@ -18,7 +17,7 @@ type write struct {
 }
 
 func NewGoFile(path, goPackage string) (w write, err error) {
-	out, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0755)
+	out, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return w, err
 	}
@@ -34,38 +33,69 @@ func (w write) Close() error {
 func (w *write) WriteString(data string) (int, error) {
 	return w.f.WriteString(data)
 }
-func (w write) WriteVarBytesToGoFile(path, goName string) error {
-	pathFile, err := os.Open(path)
+func (w write) WriteVarBytesToGoFile(path, goName string, gz bool, gzLevel int) error {
+	//pathFile, err := os.Open(path)
+	//if err != nil {
+	//	return err
+	//}
+	w.WriteString(fmt.Sprintf("\nvar %s = []byte{", goName))
+	//var writeData bytes.Buffer
+	//data := make([]byte, 1024)
+	//offset := int64(0)
+	//for {
+	//	n, err := pathFile.ReadAt(data, offset)
+	//	offset += int64(n)
+	//	if err != nil && err != io.EOF {
+	//		return err
+	//	}
+	//	if n == 0 {
+	//		break
+	//	}
+	//	for i := range data[:n] {
+	//		writeData.WriteString(strconv.FormatUint(uint64(data[i]), 10))
+	//		if !gz {
+	//			writeData.WriteByte(',')
+	//		}
+	//	}
+	//}
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	w.WriteString(fmt.Sprintf("\nvar %s = []byte{", goName))
-	var writeData strings.Builder
-	data := make([]byte, 512)
-	offset := int64(0)
-	for {
-		n, err := pathFile.ReadAt(data, offset)
-		offset += int64(n)
-		if err != nil && err.Error() != "EOF" {
-			return err
-		}
-		if n == 0 {
-			break
-		}
-		for i := range data[:n] {
-			writeData.WriteString(strconv.FormatUint(uint64(data[i]), 10))
-			writeData.WriteByte(',')
-		}
+	if gz {
+		data, err = GZIP(data, gzLevel)
 	}
-	w.WriteString(writeData.String()[:writeData.Len()-1])
+	w.WriteString(GoTools.JoinToString(data, ","))
+	//w.WriteString(writeData.String()[:writeData.Len()-1])
 	w.WriteString("}")
 	return err
 }
 
-func (w write) WriteVarMapStringBytesToGoFile(key, value []string) {
-	w.WriteString("\nvar Router = map[string][]byte{")
-	for i := range key {
-		w.WriteString(fmt.Sprintf("\n\t\"%s\": %d,", key[i], value[i]))
+func (w write) WriteRouterToGoFile(path, value []string, isGzip []bool) {
+	/*
+		type RouterInfo struct{
+			Data		[]byte
+			ContentType	string
+			Gzip		bool
+		}
+	*/
+	w.WriteString("\ntype RouterInfo struct{\n\tData\t\t[]byte\n\tContentType\tstring\n\tGzip\t\tbool\n}")
+
+	/*
+		func GetRouter(url string) (RouterInfo,bool){
+			r, ok := router[url]
+			return r, ok
+		}
+	*/
+	w.WriteString("\nfunc GetRouter(url string) (RouterInfo, bool) {\n\tr, ok := router[url]\n\treturn r, ok\n}")
+
+	/*
+		var router = map[string]RouterInfo{}
+	*/
+	w.WriteString("\nvar router = map[string]RouterInfo{")
+	for i := range path {
+		contentType := GetFileContentType(path[i])
+		w.WriteString(fmt.Sprintf("\n\t\"%s\": {\n\t\tData:        %s,\n\t\tContentType: \"%s\",\n\t\tGzip:        %t,\n\t},", path[i], value[i], contentType, isGzip[i]))
 	}
 	w.WriteString("\n}")
 }
