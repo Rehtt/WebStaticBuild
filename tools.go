@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,17 +41,19 @@ func GZIP(data []byte, level int) ([]byte, error) {
 }
 
 func GetFileContentType(path string) string {
+	ty := mime.TypeByExtension(filepath.Ext(path))
+	if ty != "" {
+		return ty
+	}
 	//http.DetectContentType 不准确
-	//f, err := os.Open(path)
-	//if err != nil {
-	//	return "", err
-	//}
-	//defer f.Close()
-	//data := make([]byte, 512)
-	//f.Read(data)
-	//return http.DetectContentType(data), nil
-
-	return mime.TypeByExtension(filepath.Ext(path))
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	data := make([]byte, 512)
+	f.Read(data)
+	return http.DetectContentType(data)
 }
 
 func GetDirName(path string) (string, error) {
