@@ -7,6 +7,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"path/filepath"
 )
 
 var (
@@ -17,10 +19,37 @@ var (
 	goPackage    = flag.String("package", "", "go package名，默认为输出路径文件夹名")
 	gz           = flag.Bool("gzip", true, "开启gzip预压缩")
 	gzLevel      = flag.Int("gz_level", 9, "gzip压缩比")
+	excludeExt   = flagM{}
+	excludeFile  = flagM{}
+	//excludeFile  = map[string]struct{}{}
+	//excludeExt   = flag.String("e_ext", "", "排除录入的文件后缀，多个后缀用|分隔（-e_ext .go|.jpg）")
+	//excludeFile  = flag.String("e_file", "", "排除录入的文件，多个用|分隔（-e_file ./file1|./web/file2）")
 )
 
+type flagM map[string]struct{}
+
+func (e flagM) String() string {
+	return fmt.Sprintf("%v", map[string]struct{}(e))
+}
+func (e flagM) Set(value string) error {
+	e[value] = struct{}{}
+	return nil
+}
+
 func main() {
+	flag.Var(&excludeExt, "e_ext", "排除录入的文件后缀，多个后缀多写几次（ WebStaticBuild -path ./ -e_ext .exe -e_ext .go ）")
+	flag.Var(&excludeFile, "e_file", "排除录入的文件，多个文件多写几次（ WebStaticBuild -path ./ -e_file ./file.go -e_file ./web/test.js ）")
 	flag.Parse()
+	// 转化为绝对地址
+	for k := range excludeFile {
+		v, err := filepath.Abs(k)
+		delete(excludeFile, k)
+		if err != nil {
+			continue
+		}
+		excludeFile[v] = struct{}{}
+	}
+
 	routerFile = *outPath + "/" + routerFile
 	resourceFile = *outPath + "/" + resourceFile
 
@@ -28,6 +57,7 @@ func main() {
 	if err != nil {
 		LogErr(err)
 	}
+
 	if *goPackage == "" {
 		*goPackage, err = GetDirName(*outPath)
 		if err != nil {
@@ -45,7 +75,6 @@ func main() {
 		LogErr(err)
 	}
 	defer resource.Close()
-
 	goFileNames := make([]string, len(inFilesPath))
 	isGzip := make([]bool, len(inFilesPath))
 	for i, v := range inFilesPath {

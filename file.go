@@ -10,6 +10,8 @@ import (
 	"github.com/Rehtt/GoTools"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 type write struct {
@@ -118,10 +120,12 @@ func GetAllFiles(dirPth string) (files []string, err error) {
 			GetAllFiles(dirPth + PthSep + fi.Name())
 		} else {
 			// 过滤指定格式
-			//ok := strings.HasSuffix(fi.Name(), ".go")
-			ok := true
-			if ok {
-				files = append(files, dirPth+PthSep+fi.Name())
+			if _, ok := excludeExt[filepath.Ext(fi.Name())]; !ok {
+				path := dirPth + PthSep + fi.Name()
+				p, _ := filepath.Abs(path)
+				if _, ok = excludeFile[p]; !ok {
+					files = append(files, strings.TrimPrefix(path, "./"))
+				}
 			}
 		}
 	}
@@ -130,7 +134,11 @@ func GetAllFiles(dirPth string) (files []string, err error) {
 	for _, table := range dirs {
 		temp, _ := GetAllFiles(table)
 		for _, temp1 := range temp {
-			files = append(files, temp1)
+			t, _ := filepath.Abs(temp1)
+			if _, ok := excludeFile[t]; !ok {
+				files = append(files, strings.TrimPrefix(temp1, "./"))
+			}
+
 		}
 	}
 
