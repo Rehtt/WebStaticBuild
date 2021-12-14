@@ -50,7 +50,7 @@ func GetFileContentType(path string) string {
 	//f.Read(data)
 	//return http.DetectContentType(data), nil
 
-	return mime.TypeByExtension("." + filepath.Ext(path))
+	return mime.TypeByExtension(filepath.Ext(path))
 }
 
 func GetDirName(path string) (string, error) {
