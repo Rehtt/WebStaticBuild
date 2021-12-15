@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 )
 
+const version = "v0.1.3"
+
 var (
 	routerFile   = "router.go"
 	resourceFile = "resource.go"
@@ -20,11 +22,9 @@ var (
 	gz           = flag.Bool("gzip", true, "开启gzip预压缩")
 	gzLevel      = flag.Int("gz_level", 9, "gzip压缩比")
 	printInfo    = flag.Bool("print", false, "输出详情")
+	ver          = flag.Bool("version", false, "显示版本")
 	excludeExt   = flagM{}
 	excludeFile  = flagM{}
-	//excludeFile  = map[string]struct{}{}
-	//excludeExt   = flag.String("e_ext", "", "排除录入的文件后缀，多个后缀用|分隔（-e_ext .go|.jpg）")
-	//excludeFile  = flag.String("e_file", "", "排除录入的文件，多个用|分隔（-e_file ./file1|./web/file2）")
 )
 
 type flagM map[string]struct{}
@@ -41,6 +41,12 @@ func main() {
 	flag.Var(&excludeExt, "e_ext", "排除录入的文件后缀，多个后缀多写几次（ WebStaticBuild -path ./ -e_ext .exe -e_ext .go ）")
 	flag.Var(&excludeFile, "e_file", "排除录入的文件，多个文件多写几次（ WebStaticBuild -path ./ -e_file ./file.go -e_file ./web/test.js ）")
 	flag.Parse()
+
+	if *ver {
+		fmt.Println("Version:", version)
+		return
+	}
+
 	// 转化为绝对地址
 	for k := range excludeFile {
 		v, err := filepath.Abs(k)
