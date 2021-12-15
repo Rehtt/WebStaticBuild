@@ -6,6 +6,12 @@ go version >= 1.16
 ```shell
 go install github.com/Rehtt/WebStaticBuild@latest
 ```
+OR
+```shell
+git clone https://github.com/Rehtt/WebStaticBuild
+cd WebStaticBuild
+go install
+```
 
 # 使用
 ```shell
