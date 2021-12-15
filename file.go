@@ -124,7 +124,7 @@ func GetAllFiles(dirPth string) (files []string, err error) {
 				path := dirPth + PthSep + fi.Name()
 				p, _ := filepath.Abs(path)
 				if _, ok = excludeFile[p]; !ok {
-					files = append(files, strings.TrimPrefix(path, "./"))
+					files = append(files, strings.TrimPrefix(path, *inFile))
 				}
 			}
 		}
@@ -136,7 +136,7 @@ func GetAllFiles(dirPth string) (files []string, err error) {
 		for _, temp1 := range temp {
 			t, _ := filepath.Abs(temp1)
 			if _, ok := excludeFile[t]; !ok {
-				files = append(files, strings.TrimPrefix(temp1, "./"))
+				files = append(files, strings.TrimPrefix(temp1, *inFile))
 			}
 
 		}

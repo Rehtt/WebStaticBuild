@@ -61,9 +61,8 @@ func GetDirName(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	d, _ := filepath.Split(p)
-	fmt.Println(d)
-	s := strings.Split(d, string(os.PathSeparator))
+	_, f := filepath.Split(p)
+	s := strings.Split(f, string(os.PathSeparator))
 	if len(s) > 1 {
 		return s[len(s)-2], nil
 	}

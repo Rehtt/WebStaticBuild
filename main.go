@@ -14,11 +14,12 @@ import (
 var (
 	routerFile   = "router.go"
 	resourceFile = "resource.go"
-	inFile       = flag.String("path", "./web", "输入文件路径")
+	inFile       = flag.String("path", "./", "输入文件路径")
 	outPath      = flag.String("out", "./", "输出路径")
 	goPackage    = flag.String("package", "", "go package名，默认为输出路径文件夹名")
 	gz           = flag.Bool("gzip", true, "开启gzip预压缩")
 	gzLevel      = flag.Int("gz_level", 9, "gzip压缩比")
+	printInfo    = flag.Bool("print", false, "输出详情")
 	excludeExt   = flagM{}
 	excludeFile  = flagM{}
 	//excludeFile  = map[string]struct{}{}
@@ -80,7 +81,10 @@ func main() {
 	for i, v := range inFilesPath {
 		goFileNames[i] = "res" + MD5(v)
 		isGzip[i] = *gz
-		resource.WriteVarBytesToGoFile(v, goFileNames[i], *gz, *gzLevel)
+		resource.WriteVarBytesToGoFile(*inFile+v, goFileNames[i], *gz, *gzLevel)
+		if *printInfo {
+			fmt.Println(v)
+		}
 	}
 	router.WriteRouterToGoFile(inFilesPath, goFileNames, isGzip)
 }
